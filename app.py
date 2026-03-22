@@ -34,7 +34,7 @@ transform = transforms.Compose([
 # UI HEADER
 # -------------------------
 st.markdown("""
-    <h1 style='text-align: center; color: #2e7d32;'>🌳 Tree Classifier 🌳</h1>
+    <h1 style='text-align: center; color: #2e7d32;'>Tree Classifier</h1>
     <p style='text-align: center;'>Upload an image to check if the tree is fruit-bearing</p>
 """, unsafe_allow_html=True)
 
@@ -69,14 +69,35 @@ if uploaded_file is not None:
             probabilities = torch.nn.functional.softmax(output[0], dim=0)
             confidence, pred = torch.max(probabilities, 0)
 
-    label = classes[pred]
     confidence_value = confidence.item()
 
-    # Color based on prediction
+    # -------------------------
+    # NOT SURE THRESHOLD
+    # -------------------------
+    THRESHOLD = 0.70
+
+    if confidence_value < THRESHOLD:
+        label = "not_sure"
+    else:
+        label = classes[pred]
+
+    # -------------------------
+    # COLOR LOGIC
+    # -------------------------
     if label == "fruit_bearing":
         color = "#4CAF50"
-    else:
+    elif label == "non_fruit_bearing":
         color = "#F44336"
+    else:
+        color = "#9E9E9E"  # gray for not sure
+
+    # -------------------------
+    # DISPLAY TEXT
+    # -------------------------
+    display_label = (
+        "Not Sure" if label == "not_sure"
+        else label.replace("_", " ").title()
+    )
 
     # -------------------------
     # RESULT BOX
@@ -90,16 +111,20 @@ if uploaded_file is not None:
             text-align: center;
             margin-top: 20px;
         ">
-            <h2>{label.replace('_', ' ').title()}</h2>
+            <h2>{display_label}</h2>
             <h4>Confidence: {confidence_value * 100:.2f}%</h4>
         </div>
     """, unsafe_allow_html=True)
 
+    # Optional message
+    if label == "not_sure":
+        st.info("The model is not confident. Try another image.")
+
     # -------------------------
-    # PROBABILITY UI (FIXED)
+    # PROBABILITY UI
     # -------------------------
     st.markdown("---")
-    st.subheader("📊 Prediction Confidence")
+    st.subheader("Prediction Confidence")
 
     fruit_prob = probabilities[0].item()
     nonfruit_prob = probabilities[1].item()
@@ -107,12 +132,12 @@ if uploaded_file is not None:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("**🌿 Fruit Bearing**")
+        st.markdown("**Fruit Bearing**")
         st.progress(fruit_prob)
         st.write(f"{fruit_prob*100:.2f}%")
 
     with col2:
-        st.markdown("**🌳 Non Fruit Bearing**")
+        st.markdown("**Non Fruit Bearing**")
         st.progress(nonfruit_prob)
         st.write(f"{nonfruit_prob*100:.2f}%")
 
