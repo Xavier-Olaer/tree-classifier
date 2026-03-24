@@ -15,9 +15,9 @@ st.set_page_config(
 # -------------------------
 # LOAD MODEL
 # -------------------------
-model = models.resnet18()
-model.fc = torch.nn.Linear(model.fc.in_features, 2)
-model.load_state_dict(torch.load("tree_classifier.pth", map_location="cpu"))
+model = models.efficientnet_b0()
+model.classifier[1] = torch.nn.Linear(model.classifier[1].in_features, 2)
+model.load_state_dict(torch.load("tree_classifier_efficientnet.pth", map_location="cpu"))
 model.eval()
 
 classes = ["fruit_bearing", "non_fruit_bearing"]
@@ -34,8 +34,10 @@ transform = transforms.Compose([
 # UI HEADER
 # -------------------------
 st.markdown("""
-    <h1 style='text-align: center; color: #2e7d32;'>Tree Classifier</h1>
-    <p style='text-align: center;'>Upload an image to check if the tree is fruit-bearing</p>
+    <h1 style='text-align: center; color: #2e7d32;'>🌳 Tree Classifier</h1>
+    <p style='text-align: center; font-size:16px;'>
+        Upload a tree image to check if it is fruit-bearing
+    </p>
 """, unsafe_allow_html=True)
 
 st.markdown("---")
@@ -44,13 +46,18 @@ st.markdown("---")
 # SIDEBAR
 # -------------------------
 st.sidebar.title("ℹ️ About")
-st.sidebar.write("This AI model classifies whether a tree is fruit-bearing or not.")
+st.sidebar.write(
+    "This AI model classifies whether a tree is fruit-bearing or not using deep learning."
+)
+
+st.sidebar.markdown("---")
+st.sidebar.write("**Tip:** Use clear tree images for better results.")
 
 # -------------------------
 # FILE UPLOAD
 # -------------------------
 uploaded_file = st.file_uploader(
-    "Upload a tree image",
+    "📤 Upload a tree image",
     type=["jpg", "png", "jpeg"]
 )
 
@@ -59,12 +66,13 @@ uploaded_file = st.file_uploader(
 # -------------------------
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Uploaded Image", width="stretch")
+
+    st.image(image, caption="📷 Uploaded Image", width="stretch")
 
     img = transform(image).unsqueeze(0)
 
     with torch.no_grad():
-        with st.spinner("Analyzing image..."):
+        with st.spinner("🔍 Analyzing image..."):
             output = model(img)
             probabilities = torch.nn.functional.softmax(output[0], dim=0)
             confidence, pred = torch.max(probabilities, 0)
@@ -86,10 +94,13 @@ if uploaded_file is not None:
     # -------------------------
     if label == "fruit_bearing":
         color = "#4CAF50"
+        emoji = "🌿"
     elif label == "non_fruit_bearing":
         color = "#F44336"
+        emoji = "🌳"
     else:
-        color = "#9E9E9E"  # gray for not sure
+        color = "#9E9E9E"
+        emoji = "❓"
 
     # -------------------------
     # DISPLAY TEXT
@@ -104,42 +115,46 @@ if uploaded_file is not None:
     # -------------------------
     st.markdown(f"""
         <div style="
-            padding: 20px;
-            border-radius: 12px;
+            padding: 25px;
+            border-radius: 15px;
             background-color: {color};
             color: white;
             text-align: center;
             margin-top: 20px;
         ">
-            <h2>{display_label}</h2>
+            <h2>{emoji} {display_label}</h2>
             <h4>Confidence: {confidence_value * 100:.2f}%</h4>
         </div>
     """, unsafe_allow_html=True)
 
-    # Optional message
+    # -------------------------
+    # NOT SURE MESSAGE
+    # -------------------------
     if label == "not_sure":
-        st.info("The model is not confident. Try another image.")
+        st.warning("⚠️ The model is not confident. Try a clearer or different image.")
 
     # -------------------------
     # PROBABILITY UI
     # -------------------------
     st.markdown("---")
-    st.subheader("Prediction Confidence")
+    st.subheader("📊 Prediction Breakdown")
 
     fruit_prob = probabilities[0].item()
     nonfruit_prob = probabilities[1].item()
 
+    st.write("Model confidence for each class:")
+
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("**Fruit Bearing**")
+        st.markdown("**🌿 Fruit Bearing**")
         st.progress(fruit_prob)
-        st.write(f"{fruit_prob*100:.2f}%")
+        st.caption(f"{fruit_prob*100:.2f}%")
 
     with col2:
-        st.markdown("**Non Fruit Bearing**")
+        st.markdown("**🌳 Non Fruit Bearing**")
         st.progress(nonfruit_prob)
-        st.write(f"{nonfruit_prob*100:.2f}%")
+        st.caption(f"{nonfruit_prob*100:.2f}%")
 
 # -------------------------
 # FOOTER
