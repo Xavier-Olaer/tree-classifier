@@ -269,13 +269,8 @@ if uploaded_file is not None:
     if info:
         st.write(f"**🌳 Detected Tree (Dataset):** {tree_type.title()}")
         st.write(f"**🌿 Expected Type:** {info['type']}")
-
         st.write(f"📖 {info['description']}")
         st.info(f"💡 Fun Fact: {info['fun_fact']}")
-
-    else:
-        st.warning("⚠️ Tree type not recognized from filename.")
-
     # -------------------------
     # PROBABILITY UI
     # -------------------------
