@@ -3,6 +3,130 @@ import torch
 from torchvision import transforms, models
 from PIL import Image
 
+# =========================
+# TREE INFO DATABASE
+# =========================
+tree_info = {
+    # FRUIT BEARING
+    "avocado": {
+        "type": "Fruit Bearing",
+        "description": "A tropical tree that produces creamy, nutrient-rich avocados.",
+        "fun_fact": "Avocados are technically berries!"
+    },
+    "banana": {
+        "type": "Fruit Bearing",
+        "description": "A fast-growing plant that produces bananas.",
+        "fun_fact": "Banana plants are actually giant herbs, not trees!"
+    },
+    "coconut": {
+        "type": "Fruit Bearing",
+        "description": "A tropical tree known for producing coconuts.",
+        "fun_fact": "Coconuts can travel across oceans and still grow!"
+    },
+    "guava": {
+        "type": "Fruit Bearing",
+        "description": "A small tree that produces sweet and aromatic guava fruits.",
+        "fun_fact": "Guava has more Vitamin C than oranges."
+    },
+    "guyabano": {
+        "type": "Fruit Bearing",
+        "description": "Also known as soursop, it produces large, spiky fruits.",
+        "fun_fact": "Guyabano is often used in juices and desserts."
+    },
+    "jackfruit": {
+        "type": "Fruit Bearing",
+        "description": "A large tropical tree that produces the biggest tree fruit.",
+        "fun_fact": "Jackfruit can weigh up to 50 kg!"
+    },
+    "kaimito": {
+        "type": "Fruit Bearing",
+        "description": "Also called star apple, known for its sweet, milky pulp.",
+        "fun_fact": "Kaimito has a star shape when cut in half."
+    },
+    "lanzones": {
+        "type": "Fruit Bearing",
+        "description": "A tropical tree that produces small, sweet fruits in clusters.",
+        "fun_fact": "Lanzones is a popular fruit in Southeast Asia."
+    },
+    "mango": {
+        "type": "Fruit Bearing",
+        "description": "A tropical tree famous for its sweet mango fruits.",
+        "fun_fact": "Mango is known as the 'King of Fruits'."
+    },
+    "santol": {
+        "type": "Fruit Bearing",
+        "description": "A tropical fruit tree with thick rind and sweet pulp.",
+        "fun_fact": "Santol is sometimes called cotton fruit."
+    },
+    "starfruit": {
+        "type": "Fruit Bearing",
+        "description": "A tree that produces star-shaped fruits.",
+        "fun_fact": "Starfruit slices look like stars."
+    },
+    "chicos": {
+        "type": "Fruit Bearing",
+        "description": "Also known as sapodilla, produces sweet brown fruits.",
+        "fun_fact": "Chico fruit tastes like caramel."
+    },
+
+    # NON-FRUIT BEARING
+    "acacia": {
+        "type": "Non-Fruit Bearing",
+        "description": "A large tree commonly used for shade and timber.",
+        "fun_fact": "Acacia trees can survive in very dry climates."
+    },
+    "balete": {
+        "type": "Non-Fruit Bearing",
+        "description": "A large fig tree often associated with folklore.",
+        "fun_fact": "Balete trees are known in Filipino myths."
+    },
+    "banaba": {
+        "type": "Non-Fruit Bearing",
+        "description": "A tree known for its medicinal leaves.",
+        "fun_fact": "Banaba leaves are used for diabetes treatment."
+    },
+    "bangkal": {
+        "type": "Non-Fruit Bearing",
+        "description": "A tree often found in swampy areas.",
+        "fun_fact": "Bangkal wood is used in local construction."
+    },
+    "bani": {
+        "type": "Non-Fruit Bearing",
+        "description": "A coastal tree known for its durability.",
+        "fun_fact": "Bani trees can survive salty environments."
+    },
+    "eucalyptus": {
+        "type": "Non-Fruit Bearing",
+        "description": "A fast-growing tree known for its aromatic leaves.",
+        "fun_fact": "Koalas feed mainly on eucalyptus leaves 🐨."
+    },
+    "gmelina": {
+        "type": "Non-Fruit Bearing",
+        "description": "A fast-growing tree used for lumber.",
+        "fun_fact": "Gmelina is widely used in furniture making."
+    },
+    "mahogany": {
+        "type": "Non-Fruit Bearing",
+        "description": "A hardwood tree valued for its timber.",
+        "fun_fact": "Mahogany wood is used in high-end furniture."
+    },
+    "molave": {
+        "type": "Non-Fruit Bearing",
+        "description": "A strong and durable native tree.",
+        "fun_fact": "Molave wood resists termites."
+    },
+    "narra": {
+        "type": "Non-Fruit Bearing",
+        "description": "The national tree of the Philippines.",
+        "fun_fact": "Narra wood is very strong and valuable."
+    },
+    "talisay": {
+        "type": "Non-Fruit Bearing",
+        "description": "A tropical tree often used for shade.",
+        "fun_fact": "Talisay leaves turn red before falling 🍂."
+    }
+}
+
 # -------------------------
 # PAGE CONFIG
 # -------------------------
@@ -62,11 +186,15 @@ uploaded_file = st.file_uploader(
 )
 
 # -------------------------
-# PREDICTION
+# CLASSIFICATION
 # -------------------------
 if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert("RGB")
 
+    # TREE TYPE DETECTION (FROM FILENAME)
+    filename = uploaded_file.name.lower()
+    tree_type = filename.split("_")[0]
+
+    image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="📷 Uploaded Image", width="stretch")
 
     img = transform(image).unsqueeze(0)
@@ -80,7 +208,7 @@ if uploaded_file is not None:
     confidence_value = confidence.item()
 
     # -------------------------
-    # NOT SURE THRESHOLD
+    # THRESHOLD
     # -------------------------
     THRESHOLD = 0.70
 
@@ -103,16 +231,16 @@ if uploaded_file is not None:
         emoji = "❓"
 
     # -------------------------
-    # DISPLAY TEXT
+    # DISPLAY LABEL
     # -------------------------
     display_label = (
         "Not Sure" if label == "not_sure"
         else label.replace("_", " ").title()
     )
 
-    # -------------------------
-    # RESULT BOX
-    # -------------------------
+    # =========================
+    # RESULT BOX DISPLAY
+    # =========================
     st.markdown(f"""
         <div style="
             padding: 25px;
@@ -122,27 +250,40 @@ if uploaded_file is not None:
             text-align: center;
             margin-top: 20px;
         ">
-            <h2>{emoji} {display_label}</h2>
+            <h2>{emoji} Classification: {display_label}</h2>
             <h4>Confidence: {confidence_value * 100:.2f}%</h4>
         </div>
     """, unsafe_allow_html=True)
 
-    # -------------------------
-    # NOT SURE MESSAGE
-    # -------------------------
     if label == "not_sure":
-        st.warning("⚠️ The model is not confident. Try a clearer or different image.")
+        st.warning("⚠️ The model is not confident. Try a clearer image.")
+
+    # =========================
+    # 🧠 SMART CONSISTENCY CHECK
+    # =========================
+    st.markdown("---")
+    st.subheader("🌳 Tree Analysis")
+
+    info = tree_info.get(tree_type)
+
+    if info:
+        st.write(f"**🌳 Detected Tree (Dataset):** {tree_type.title()}")
+        st.write(f"**🌿 Expected Type:** {info['type']}")
+
+        st.write(f"📖 {info['description']}")
+        st.info(f"💡 Fun Fact: {info['fun_fact']}")
+
+    else:
+        st.warning("⚠️ Tree type not recognized from filename.")
 
     # -------------------------
     # PROBABILITY UI
     # -------------------------
     st.markdown("---")
-    st.subheader("📊 Prediction Breakdown")
+    st.subheader("📊 Classification Breakdown")
 
     fruit_prob = probabilities[0].item()
     nonfruit_prob = probabilities[1].item()
-
-    st.write("Model confidence for each class:")
 
     col1, col2 = st.columns(2)
 
