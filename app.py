@@ -271,26 +271,6 @@ if uploaded_file is not None:
         st.write(f"**🌿 Expected Type:** {info['type']}")
         st.write(f"📖 {info['description']}")
         st.info(f"💡 Fun Fact: {info['fun_fact']}")
-    # -------------------------
-    # PROBABILITY UI
-    # -------------------------
-    st.markdown("---")
-    st.subheader("📊 Classification Breakdown")
-
-    fruit_prob = probabilities[0].item()
-    nonfruit_prob = probabilities[1].item()
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("**🌿 Fruit Bearing**")
-        st.progress(fruit_prob)
-        st.caption(f"{fruit_prob*100:.2f}%")
-
-    with col2:
-        st.markdown("**🌳 Non Fruit Bearing**")
-        st.progress(nonfruit_prob)
-        st.caption(f"{nonfruit_prob*100:.2f}%")
 
 # -------------------------
 # FOOTER
